@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mon Apprentissage | Meilleur application de Flashcards, Quiz & Mind Maps</title>
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsmind@0.5.2"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.5.2/style/jsmind.css">
+  <style>
+    :root {
+      --primary-hue: 222;
+      --primary-saturation: 74%;
+      --primary-lightness: 55%;
+      --secondary-hue: 190;
+      --secondary-saturation: 80%;
+      --secondary-lightness: 50%;
+      --success: 140, 70%, 50%;
+      --danger: 0, 80%, 50%;
+      --warning: 50, 90%, 60%;
+      --light: 0, 0%, 98%;
+      --dark: 220, 20%, 12%;
+      --gray: 220, 20%, 50%;
+      --text-light-mode: 220, 20%, 20%;
+      --text-dark-mode: 220, 80%, 90%;
+      --text-light-light-mode: 220, 20%, 60%;
+      --text-light-dark-mode: 220, 80%, 70%;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.2);
+      --border: 1px solid rgba(0, 0, 0, 0.1);
+      --border-dark: 1px solid rgba(255, 255, 255, 0.1);
+      --radius: 12px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --spacing: 1rem;
+      --spacing-sm: 0.5rem;
+      --spacing-lg: 2rem;
+      --spacing-xs: 0.25rem;
+      --font-primary: 'Inter', sans-serif;
+      --font-secondary: 'Manrope', sans-serif;
+      --highlight-yellow: rgba(255, 255, 0, 0.3);
+      --highlight-green: rgba(0, 255, 0, 0.2);
+      --highlight-blue: rgba(0, 0, 255, 0.1);
+      --highlight-pink: rgba(255, 0, 255, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: hsl(var(--light));
+      color: hsl(var(--text-light-mode));
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    body.dark-mode {
+      background-color: hsl(var(--dark));
+      color: hsl(var(--text-dark-mode));
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-sm) var(--spacing);
+      border-bottom: var(--border);
+      background-color: hsl(var(--light));
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: all var(--transition);
+    }
+
+    body.dark-mode .header {
+      background-color: hsl(var(--dark));
+      border-bottom: var(--border-dark);
+    }
+
+    .title {
+      font-family: var(--font-secondary);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: hsl(var(--primary-hue), var(--primary-saturation), var(--primary-lightness));
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--spacing-sm);
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: var(--spacing-sm) var(--spacing);
+      border-radius: var(--radius);
+      border: none;
+      background-color: hsl(var(--light));
+      color: hsl(var(--text-light-mode));
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      height: 36px;
+      min-width: 100px;
+      border: var(--border);
+      font-family: var(--font-secondary);
+    }
+
+    body.dark-mode .btn {
+      background-color: rgba(255, 255, 255, 0.08);
+      color: hsl(var(--text-dark-mode));
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    body.dark-mode .btn:hover {
+      box-shadow: var(--shadow-dark);
+    }
+
+    .btn.primary {
+      background-color: hsl(var(--primary-hue), var(--primary-saturation), var(--primary-lightness));
+      color: white;
+      border: none;
+    }
+
+    .btn.primary:hover {
+      background-color: hsl(var(--primary-hue), var(--primary-saturation), calc(var(--primary-lightness) - 10%));
+    }
+
+    /* Text Editor */
+    .text-editor {
+      width: 100%;
+      min-height: 150px;
+      padding: var(--spacing);
+      border: var(--border);
+      border-radius: var(--radius);
+      font-family: var(--font-primary);
+      font-size: 14px;
+      resize: vertical;
+      background-color: hsl(var(--light));
+      color: hsl(var(--text-light-mode));
+      line-height: 1.6;
+      transition: all var(--transition);
+      margin-bottom: var(--spacing);
+    }
+
+    body.dark-mode .text-editor {
+      background-color: hsl(var(--dark));
+      color: hsl(var(--text-dark-mode));
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Main Container */
+    .container {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--spacing);
+      gap: var(--spacing);
+      flex: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background-color: hsl(var(--light));
+      border-radius: var(--radius);
+      padding: var(--spacing);
+      box-shadow: var(--shadow);
+      height: fit-content;
+      transition: all var(--transition);
+    }
+
+    body.dark-mode .sidebar {
+      background-color: hsl(var(--dark));
+      border: var(--border-dark);
+      box-shadow: var(--shadow-dark);
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing);
+    }
+
+    .sidebar-title {
+      font-family: var(--font-secondary);
+      font-weight: 600;
+      color: hsl(var(--text-light-mode));
+    }
+
+    body.dark-mode .sidebar-title {
+      color: hsl(var(--text-dark-mode));
+    }
+
+    .sessions-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-lg);
+      color: hsl(var(--text-light-light-mode));
+      text-align: center;
+    }
+
+    body.dark-mode .sessions-empty {
+      color: hsl(var(--text-light-dark-mode));
+    }
+
+    .sessions-empty i {
+      font-size: 3rem;
+      margin-bottom: var(--spacing);
+      color: hsl(var(--gray));
+    }
+
+    .sessions-list {
+      margin-top: var(--spacing);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    .session-item {
+      padding: var(--spacing-sm);
+      background-color: hsl(var(--light));
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: var(--border);
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    body.dark-mode .session-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .session-item:hover {
+      background-color: hsl(var(--gray));
+      transform: translateY(-2px);
+    }
+
+    body.dark-mode .session-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .session-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .session-button {
+      background: none;
+      border: none;
+      color: hsl(var(--text-light-light-mode));
+      cursor: pointer;
+      padding: var(--spacing-sm);
+      border-radius: 4px;
+      transition: all var(--transition);
+    }
+
+    body.dark-mode .session-button {
+      color: hsl(var(--text-light-dark-mode));
+    }
+
+    .session-button:hover {
+      color: hsl(var(--text-light-mode));
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark-mode .session-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .session-name {
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .session-name::before {
+      content: attr(data-emoji);
+      margin-right: 8px;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      background-color: white;
+      border-radius: var(--radius);
+      padding: var(--spacing);
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+    }
+
+    body.dark-mode .main {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-dark);
+    }
+
+    /* Dashboard */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing);
+      margin-top: var(--spacing);
+    }
+
+    .card {
+      background-color: hsl(var(--light));
+      border-radius: var(--radius);
+      padding: var(--spacing);
+      box-shadow: var(--shadow);
+      border: var(--border);
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+      position: relative;
+      animation: slideUp 0.5s ease forwards;
+    }
+
+    body.dark-mode .card {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-dark);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .card:hover {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-family: var(--font-secondary);
+      font-weight: 600;
+      margin-bottom: var(--spacing);
+      color: hsl(var(--text-light-mode));
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+
+    body.dark-mode .card-title {
+      color: hsl(var(--text-dark-mode));
+    }
+
+    .close-card {
+      position: absolute;
+      top: var(--spacing-sm);
+      right: var(--spacing-sm);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: hsl(var(--text-light-light-mode));
+      transition: all var(--transition);
+      z-index: 10;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    body.dark-mode .close-card {
+      color: hsl(var(--text-light-dark-mode));
+    }
+
+    .close-card:hover {
+      color: hsl(var(--text-light-mode));
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark-mode .close-card:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Flashcards */
+    .flashcard {
+      perspective: 1000px;
+      width: 100%;
+      height: 200px;
+      margin: auto;
+      cursor: pointer;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background-color: hsl(var(--light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing);
+    }
+
+    body.dark-mode .flashcard-inner {
+      background-color: hsl(var(--dark));
+      box-shadow: var(--shadow-dark);
+    }
+
+    .flashcard.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing);
+      border-radius: var(--radius);
+      background-color: hsl(var(--light));
+      box-shadow: var(--shadow);
+    }
+
+    body.dark-mode .flashcard-front,
+    body.dark-mode .flashcard-back {
+      background-color: hsl(var(--dark));
+      box-shadow: var(--shadow-dark);
+    }
+
+    .flashcard-front p, .flashcard-back p {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: hsl(var(--text-light-mode));
+      text-align: center;
+      padding: var(--spacing-sm);
+    }
+
+    body.dark-mode .flashcard-front p,
+    body.dark-mode .flashcard-back p {
+      color: hsl(var(--text-dark-mode));
+    }
+
+    /* Quiz */
+    .quiz-option {
+      display: block;
+      width: 100%;
+      padding: var(--spacing-sm) var(--spacing);
+      margin: var(--spacing-sm) 0;
+      border-radius: var(--radius);
+      border: var(--border);
+      background-color: hsl(var(--light));
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: left;
+      animation: fadeInOption 0.3s ease forwards;
+    }
+
+    body.dark-mode .quiz-option {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInOption {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-option:hover {
+      background-color: hsl(var(--gray));
+    }
+
+    body.dark-mode .quiz-option:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .quiz-option.correct {
+      background-color: rgba(40, 167, 69, 0.2);
+      border-color: rgba(40, 167, 69, 0.5);
+    }
+
+    .quiz-option.incorrect {
+      background-color: rgba(220, 53, 69, 0.2);
+      border-color: rgba(220, 53, 69, 0.5);
+    }
+
+    /* Custom Alert */
+    .alert {
+      position: fixed;
+      top: var(--spacing-lg);
+      right: var(--spacing-lg);
+      padding: var(--spacing);
+      border-radius: var(--radius);
+      background-color: hsl(var(--dark));
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1002;
+      display: none;
+      animation: slideInRight 0.4s ease forwards;
+      max-width: 350px;
+    }
+
+    .alert.success {
+      background-color: hsl(var(--success));
+    }
+
+    .alert.error {
+      background-color: hsl(var(--danger));
+    }
+
+    .alert-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .alert-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-left: auto;
+      font-size: 1.2rem;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Fullscreen Modes */
+    .fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: var(--spacing);
+      animation: fadeInBackground 0.4s ease forwards;
+    }
+
+    @keyframes fadeInBackground {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fullscreen-content {
+      background-color: white;
+      border-radius: var(--radius);
+      padding: var(--spacing-lg);
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: all var(--transition);
+      position: relative;
+      animation: zoomIn 0.4s ease forwards;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark-mode .fullscreen-content {
+      background-color: hsl(var(--dark));
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .fullscreen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing);
+    }
+
+    .fullscreen-title {
+      font-family: var(--font-secondary);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: hsl(var(--text-light-mode));
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    body.dark-mode .fullscreen-title {
+      color: hsl(var(--text-dark-mode));
+    }
+
+    .close-button {
+      position: absolute;
+      top: var(--spacing);
+      right: var(--spacing);
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: hsl(var(--text-light-light-mode));
+      transition: all var(--transition);
+      z-index: 10;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    body.dark-mode .close-button {
+      color: hsl(var(--text-light-dark-mode));
+    }
+
+    .close-button:hover {
+      color: hsl(var(--text-light-mode));
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark-mode .close-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mind Map Container */
+    .mindmap-container {
+      width: 100%;
+      height: 60vh;
+      margin: var(--spacing) 0;
+      border: var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    #mind-map-full {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+      .fullscreen-content {
+        width: 95%;
+        padding: var(--spacing);
+      }
+      .btn-group-main, .btn-group {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    /* Hidden utility */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Support Buttons (en bas à gauche) */
+    .support-buttons {
+      position: fixed;
+      bottom: var(--spacing-lg);
+      left: var(--spacing-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      z-index: 1000;
+    }
+
+    .support-button {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius);
+      background-color: hsl(var(--light));
+      color: hsl(var(--text-light-mode));
+      border: var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+      overflow: hidden;
+    }
+
+    body.dark-mode .support-button {
+      background-color: hsl(var(--dark));
+      color: hsl(var(--text-dark-mode));
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-dark);
+    }
+
+    .support-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .support-button img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .support-button.active {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Dark Mode Toggle */
+    .dark-toggle {
+      position: fixed;
+      bottom: var(--spacing-lg);
+      right: var(--spacing-lg);
+      z-index: 1000;
+    }
+
+    .dark-toggle button {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius);
+      background-color: hsl(var(--light));
+      color: hsl(var(--text-light-mode));
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+    }
+
+    body.dark-mode .dark-toggle button {
+      background-color: hsl(var(--dark));
+      color: hsl(var(--text-dark-mode));
+      box-shadow: var(--shadow-dark);
+    }
+
+    .dark-toggle button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <!-- Alert -->
+  <div class="alert" id="customAlert">
+    <div class="alert-info">
+      <i class="fas fa-info-circle"></i>
+      <span id="alertMessage"></span>
+      <button class="alert-close" onclick="closeAlert()"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title">
+      <i class="fas fa-brain"></i>
+      Mon Apprentissage
+    </div>
+    <div class="actions">
+      <button class="btn primary" onclick="showShareModal()">
+        <i class="fas fa-share-alt"></i>
+        Partager
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <i class="fas fa-list"></i>
+          Sessions
+        </div>
+        <button class="btn" onclick="showNewSessionModal()">
+          <i class="fas fa-plus"></i>
+          Nouvelle
+        </button>
+      </div>
+      <div class="sessions-list" id="sessions-list">
+        <div class="sessions-empty hidden" id="sessions-empty">
+          <i class="fas fa-box-open"></i>
+          <p>Aucune session enregistrée.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+      <!-- JSON Input -->
+      <div class="prompt-container">
+        <div class="prompt-title">
+          <i class="fas fa-code"></i>
+          JSON Personnalisé
+        </div>
+        <textarea id="json-input" class="text-editor" placeholder='Exemple de JSON :
+{
+  "emoji": "🌍",
+  "flashcards": [
+    { "recto": "Capital de la France ?", "verso": "Paris" }
+  ],
+  "quiz": [
+    {
+      "question": "Quelle est la capitale de l\'Italie ?",
+      "options": ["Rome", "Milan", "Venise", "Naples"],
+      "correct": 0
+    }
+  ],
+  "mindmap": {
+    "topic": "Apprentissage",
+    "children": [
+      {
+        "topic": "Flashcards",
+        "children": [
+          { "topic": "Géographie" },
+          { "topic": "Histoire" }
+        ]
+      }
+    ]
+  }
+}'></textarea>
+      </div>
+
+      <!-- AI JSON Generator -->
+      <div class="prompt-container">
+        <div class="prompt-title">
+          <i class="fas fa-robot"></i>
+          Générateur de JSON avec IA
+        </div>
+        <textarea id="prompt-input" class="text-editor" placeholder="Exemple : Crée un quiz de 5 questions sur les capitales d'Europe et 3 flashcards sur les pays."></textarea>
+      </div>
+
+      <!-- Boutons alignés horizontalement -->
+      <div class="btn-group-main">
+        <button class="btn primary" onclick="generateJSONWithPrompt()">
+          <i class="fas fa-magic"></i>
+          Générer le JSON
+        </button>
+        <button class="btn primary" onclick="startSession()">
+          <i class="fas fa-play"></i>
+          Commencer
+        </button>
+        <button class="btn" onclick="saveSession()">
+          <i class="fas fa-save"></i>
+          Sauvegarder
+        </button>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" class="dashboard hidden"></div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Modals -->
+  <!-- Flashcards -->
+  <div id="flashcards-fullscreen" class="fullscreen">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <div class="fullscreen-title">
+          <i class="fas fa-book"></i>
+          Flashcards
+        </div>
+        <button class="close-button" onclick="exitFullscreen('flashcards-fullscreen')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="progress">
+        <div id="flashcard-progress" class="progress-bar" style="width: 0%;"></div>
+      </div>
+      <div class="flashcard" tabindex="0" onclick="flipFlashcard()" onkeydown="if(event.key==='Enter' || event.key===' ') flipFlashcard()">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            <p id="flashcard-question">Question ou terme à apprendre</p>
+          </div>
+          <div class="flashcard-back">
+            <p id="flashcard-answer">Réponse ou définition</p>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group full-width">
+        <button class="btn" onclick="flashcardAnswer(false)">
+          <i class="fas fa-times"></i>
+          Échec
+        </button>
+        <button class="btn primary" onclick="flashcardAnswer(true)">
+          <i class="fas fa-check"></i>
+          Réussite
+        </button>
+      </div>
+      <button class="btn back" onclick="exitFullscreen('flashcards-fullscreen')">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div id="quiz-fullscreen" class="fullscreen">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <div class="fullscreen-title">
+          <i class="fas fa-question-circle"></i>
+          Quiz
+        </div>
+        <button class="close-button" onclick="exitFullscreen('quiz-fullscreen')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="progress">
+        <div id="quiz-progress" class="progress-bar" style="width: 0%;"></div>
+      </div>
+      <p id="quiz-question" style="font-weight: 600; font-size: 1.2rem; min-height: 70px; text-align: center; margin: var(--spacing) 0;"></p>
+      <div id="quiz-options"></div>
+      <div class="btn-group full-width">
+        <button id="quiz-next-btn" class="btn primary" onclick="nextQuizQuestion()" disabled>
+          <i class="fas fa-arrow-right"></i>
+          Suivant
+        </button>
+      </div>
+      <button class="btn back" onclick="exitFullscreen('quiz-fullscreen')">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+    </div>
+  </div>
+
+  <!-- Mind Map -->
+  <div id="mindmap-fullscreen" class="fullscreen">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <div class="fullscreen-title">
+          <i class="fas fa-project-diagram"></i>
+          Carte Mentale
+        </div>
+        <button class="close-button" onclick="exitFullscreen('mindmap-fullscreen')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="mindmap-container">
+        <div id="mind-map-full"></div>
+        <div class="mind-map-empty hidden" id="mind-map-full-empty">
+          <i class="fas fa-project-diagram"></i>
+          Aucune carte mentale chargée
+        </div>
+      </div>
+      <button class="btn back" onclick="exitFullscreen('mindmap-fullscreen')">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="fullscreen">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <div class="fullscreen-title">
+          <i class="fas fa-share-alt"></i>
+          Partager
+        </div>
+        <button class="close-button" onclick="closeShareModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div style="margin: var(--spacing) 0;">
+        <div style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-bottom: var(--spacing);">
+          <button class="btn" onclick="shareOnWhatsApp()">
+            <i class="fab fa-whatsapp"></i>
+            WhatsApp
+          </button>
+          <button class="btn" onclick="shareOnFacebook()">
+            <i class="fab fa-facebook"></i>
+            Facebook
+          </button>
+          <button class="btn" onclick="shareByEmail()">
+            <i class="fas fa-envelope"></i>
+            Email
+          </button>
+        </div>
+        <p style="margin-bottom: var(--spacing-sm); font-weight: 500;">Copier le JSON :</p>
+        <textarea id="share-json" rows="6" class="text-editor" style="margin-bottom: var(--spacing-sm);"></textarea>
+        <button class="btn primary" onclick="copyToClipboard()">
+          <i class="fas fa-copy"></i>
+          Copier le JSON
+        </button>
+        <p style="margin-top: var(--spacing); font-weight: 500;">Lien de partage :</p>
+        <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+          <input type="text" id="share-link" class="text-editor" style="height: 36px; min-height: auto; resize: none;" readonly>
+          <button class="btn primary" onclick="copyShareLink()">
+            <i class="fas fa-copy"></i>
+            Copier
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Session Modal -->
+  <div id="newSessionModal" class="fullscreen">
+    <div class="fullscreen-content">
+      <div class="fullscreen-header">
+        <div class="fullscreen-title">
+          <i class="fas fa-plus"></i>
+          Nouvelle Session
+        </div>
+        <button class="close-button" onclick="closeNewSessionModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <input type="text" id="new-session-name" class="text-editor" style="height: 40px; min-height: auto; resize: none; margin-bottom: var(--spacing);" placeholder="Nom de la session">
+      <button class="btn primary" onclick="createNewSession()">
+        <i class="fas fa-check"></i>
+        Créer
+      </button>
+    </div>
+  </div>
+
+  <!-- Support Buttons (en bas à gauche) -->
+  <div class="support-buttons">
+    <button class="support-button" id="ukraine-button" onclick="selectSupport('ukraine')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Ukraine.svg" alt="Drapeau Ukraine">
+    </button>
+    <button class="support-button" id="palestine-button" onclick="selectSupport('palestine')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg" alt="Drapeau Palestine">
+    </button>
+    <button class="support-button" id="pink-ribbon-button" onclick="selectSupport('pink-ribbon')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Pink_ribbon.svg" alt="Ruban Rose">
+    </button>
+  </div>
+
+  <!-- Dark Mode Toggle -->
+  <div class="dark-toggle">
+    <button onclick="toggleDarkMode()">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <script>
+    // Variables globales
+    let flashcards = [];
+    let quizQuestions = [];
+    let mindMapData = null;
+    let currentFlashcardIndex = 0;
+    let incorrectFlashcards = [];
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let quizAnswered = false;
+    let flashcardChart = null;
+    let quizChart = null;
+    let sessions = JSON.parse(localStorage.getItem('flashcardSessions')) || [];
+    let notes = localStorage.getItem('notes') || '';
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSessions();
+      checkSessionsEmpty();
+      if (document.getElementById('notes-text')) {
+        document.getElementById('notes-text').value = notes;
+      }
+      updateShareLink();
+      loadDataFromURL();
+      checkOctober();
+    });
+
+    // Vérifie si la liste des sessions est vide
+    function checkSessionsEmpty() {
+      const sessionsList = document.getElementById('sessions-list');
+      const emptyState = document.getElementById('sessions-empty');
+      if (sessionsList && emptyState) {
+        if (sessions.length === 0) {
+          emptyState.classList.remove('hidden');
+        } else {
+          emptyState.classList.add('hidden');
+        }
+      }
+    }
+
+    // Chargement des sessions
+    function loadSessions() {
+      const sessionsList = document.getElementById('sessions-list');
+      if (!sessionsList) return;
+      sessionsList.innerHTML = '';
+      sessions.forEach((session, index) => {
+        const sessionItem = document.createElement('div');
+        sessionItem.className = 'session-item';
+        const emoji = session.emoji || "📚";
+        sessionItem.innerHTML = `
+          <div>
+            <div class="session-name" data-emoji="${emoji}">${session.name}</div>
+            <div class="session-date">${new Date(session.date).toLocaleString()}</div>
+          </div>
+          <div class="session-actions">
+            <button class="session-button" onclick="loadSession(${index})">
+              <i class="fas fa-file-import"></i>
+            </button>
+            <button class="session-button" onclick="deleteSession(${index})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+        sessionsList.appendChild(sessionItem);
+      });
+      checkSessionsEmpty();
+    }
+
+    // Sauvegarder une session
+    function saveSession() {
+      const jsonInput = document.getElementById('json-input');
+      if (!jsonInput) return;
+      const jsonValue = jsonInput.value;
+      if (!jsonValue.trim()) {
+        showAlert("Veuillez entrer un JSON valide.", "error");
+        return;
+      }
+      const sessionName = prompt("Nom de la session :", `Session ${sessions.length + 1}`);
+      if (!sessionName) return;
+      const emoji = prompt("Choisissez un emoji pour cette session (ex: 🌍, 📚, 🧠) :", "📚");
+      const newSession = {
+        name: sessionName,
+        emoji: emoji || "📚",
+        date: new Date().toISOString(),
+        data: jsonValue,
+        notes: notes
+      };
+      sessions.push(newSession);
+      localStorage.setItem('flashcardSessions', JSON.stringify(sessions));
+      loadSessions();
+      showAlert("Session sauvegardée avec succès !", "success");
+    }
+
+    // Charger une session
+    function loadSession(index) {
+      if (!sessions[index]) return;
+      const session = sessions[index];
+      const jsonInput = document.getElementById('json-input');
+      if (jsonInput) {
+        jsonInput.value = session.data;
+        showAlert(`Session "${session.name}" chargée.`, "success");
+      }
+    }
+
+    // Supprimer une session
+    function deleteSession(index) {
+      if (confirm("Supprimer cette session ?")) {
+        sessions.splice(index, 1);
+        localStorage.setItem('flashcardSessions', JSON.stringify(sessions));
+        loadSessions();
+        showAlert("Session supprimée.", "success");
+      }
+    }
+
+    // Sauvegarder les notes automatiquement
+    function saveNotes() {
+      const notesText = document.getElementById('notes-text');
+      if (!notesText) return;
+      notes = notesText.value;
+      localStorage.setItem('notes', notes);
+    }
+
+    // Créer une nouvelle session
+    function showNewSessionModal() {
+      const modal = document.getElementById('newSessionModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+      }
+    }
+
+    function closeNewSessionModal() {
+      const modal = document.getElementById('newSessionModal');
+      if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => modal.style.display = 'none', 300);
+      }
+    }
+
+    function createNewSession() {
+      const sessionNameInput = document.getElementById('new-session-name');
+      if (!sessionNameInput) return;
+      const sessionName = sessionNameInput.value;
+      if (!sessionName.trim()) {
+        showAlert("Veuillez entrer un nom pour la session.", "error");
+        return;
+      }
+      const jsonInput = document.getElementById('json-input');
+      if (jsonInput) {
+        jsonInput.value = JSON.stringify({
+          emoji: "📚",
+          flashcards: [],
+          quiz: [],
+          mindmap: {
+            topic: sessionName,
+            children: []
+          }
+        }, null, 2);
+      }
+      closeNewSessionModal();
+      showAlert("Nouvelle session créée.", "success");
+    }
+
+    // Mode sombre
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      const icon = document.querySelector('.dark-toggle i');
+      if (icon) {
+        if (document.body.classList.contains('dark-mode')) {
+          icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+          icon.classList.replace('fa-sun', 'fa-moon');
+        }
+      }
+    }
+
+    // Vérifier si on est en octobre pour activer le ruban rose
+    function checkOctober() {
+      const now = new Date();
+      if (now.getMonth() === 9) { // Octobre = mois 9 (0-indexé)
+        const pinkRibbonButton = document.getElementById('pink-ribbon-button');
+        if (pinkRibbonButton) {
+          pinkRibbonButton.classList.add('active');
+        }
+      }
+    }
+
+    // Sélection d'un drapeau ou symbole
+    function selectSupport(type) {
+      // Réinitialiser les styles actifs
+      document.querySelectorAll('.support-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      // Activer le bouton sélectionné
+      const button = document.getElementById(`${type}-button`);
+      if (button) {
+        button.classList.add('active');
+      }
+      showAlert(`Support pour ${type === 'pink-ribbon' ? 'Octobre Rose' : type} activé.`, "success");
+    }
+
+    // Quitter le mode plein écran
+    function exitFullscreen(elementId) {
+      const element = document.getElementById(elementId);
+      if (!element || element.style.display !== 'flex') return;
+      const dashboard = document.getElementById('dashboard');
+      element.style.opacity = '0';
+      setTimeout(() => {
+        element.style.display = 'none';
+        if (dashboard) dashboard.classList.remove('hidden');
+      }, 300);
+      if (elementId === 'mindmap-fullscreen') {
+        const container = document.getElementById('mind-map-full');
+        if (container) container.innerHTML = '';
+      }
+    }
+
+    // Fermer les modales
+    function closeShareModal() {
+      exitFullscreen('shareModal');
+    }
+
+    function closeNewSessionModal() {
+      exitFullscreen('newSessionModal');
+    }
+
+    // Afficher une alerte personnalisée
+    function showAlert(message, type) {
+      const alertBox = document.getElementById('customAlert');
+      const alertMessage = document.getElementById('alertMessage');
+      if (alertBox && alertMessage) {
+        alertMessage.textContent = message;
+        alertBox.className = 'alert';
+        alertBox.classList.add(type);
+        alertBox.style.display = 'block';
+        setTimeout(() => closeAlert(), 5000);
+      }
+    }
+
+    // Fermer l'alerte
+    function closeAlert() {
+      const alertBox = document.getElementById('customAlert');
+      if (alertBox) {
+        alertBox.style.opacity = '0';
+        setTimeout(() => alertBox.style.display = 'none', 300);
+      }
+    }
+
+    // Afficher la modale de partage
+    function showShareModal() {
+      const modal = document.getElementById('shareModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.opacity = '1', 10);
+        updateShareLink();
+      }
+    }
+
+    // Copier dans le presse-papiers
+    function copyToClipboard() {
+      const jsonText = document.getElementById('share-json');
+      if (!jsonText) return;
+      const jsonInput = document.getElementById('json-input');
+      if (!jsonInput) return;
+      jsonText.value = jsonInput.value;
+      jsonText.select();
+      document.execCommand('copy');
+      showAlert('JSON copié dans le presse-papiers !', 'success');
+    }
+
+    // Copier le lien de partage
+    function copyShareLink() {
+      const shareLink = document.getElementById('share-link');
+      if (!shareLink) return;
+      shareLink.select();
+      document.execCommand('copy');
+      showAlert('Lien de partage copié dans le presse-papiers !', 'success');
+    }
+
+    // Mettre à jour le lien de partage
+    function updateShareLink() {
+      const jsonInput = document.getElementById('json-input');
+      const notesText = document.getElementById('notes-text');
+      if (!jsonInput || !notesText) return;
+      const shareData = {
+        json: jsonInput.value,
+        notes: notesText.value
+      };
+      const shareDataString = encodeURIComponent(JSON.stringify(shareData));
+      const shareLink = `${window.location.origin}${window.location.pathname}?data=${shareDataString}`;
+      const shareLinkInput = document.getElementById('share-link');
+      if (shareLinkInput) {
+        shareLinkInput.value = shareLink;
+      }
+    }
+
+    // Charger les données depuis l'URL
+    function loadDataFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataParam = urlParams.get('data');
+      if (dataParam) {
+        try {
+          const shareData = JSON.parse(decodeURIComponent(dataParam));
+          const jsonInput = document.getElementById('json-input');
+          const notesText = document.getElementById('notes-text');
+          if (jsonInput && notesText) {
+            jsonInput.value = shareData.json || '';
+            notesText.value = shareData.notes || '';
+            notes = shareData.notes || '';
+            localStorage.setItem('notes', notes);
+            showAlert("Données chargées depuis l'URL !", "success");
+          }
+        } catch (e) {
+          showAlert("Erreur lors du chargement des données depuis l'URL.", "error");
+        }
+      }
+    }
+
+    // Partager sur WhatsApp
+    function shareOnWhatsApp() {
+      const shareLink = document.getElementById('share-link');
+      if (!shareLink) return;
+      const url = `https://wa.me/?text=${encodeURIComponent(`🤩 🤩Salut ! Voici mon projet Mon Apprentissage que je te partage 📖: ${shareLink.value}`)}`;
+      window.open(url, '_blank');
+    }
+
+    // Partager sur Facebook
+    function shareOnFacebook() {
+      const shareLink = document.getElementById('share-link');
+      if (!shareLink) return;
+      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink.value)}`;
+      window.open(url, '_blank');
+    }
+
+    // Partager par Email
+    function shareByEmail() {
+      const shareLink = document.getElementById('share-link');
+      if (!shareLink) return;
+      window.location.href = `mailto:?subject=Partage de mon projet Mon Apprentissage&body=${encodeURIComponent(`Salut ! Je te partage mon projet Mon Apprentissage : ${shareLink.value}`)}`;
+    }
+
+    // Démarrer une session
+    function startSession() {
+      try {
+        const jsonInput = document.getElementById('json-input');
+        if (!jsonInput) return;
+        const data = JSON.parse(jsonInput.value);
+        flashcards = Array.isArray(data.flashcards) ? data.flashcards : [];
+        quizQuestions = Array.isArray(data.quiz) ? data.quiz : [];
+        mindMapData = data.mindmap || null;
+        const dashboard = document.getElementById('dashboard');
+        if (!dashboard) return;
+        dashboard.classList.remove('hidden');
+        dashboard.innerHTML = '';
+        if (flashcards.length > 0) {
+          dashboard.innerHTML += `
+            <div class="card">
+              <button class="close-card" onclick="closeCard(this)">
+                <i class="fas fa-times"></i>
+              </button>
+              <div class="card-title">
+                <i class="fas fa-book"></i>
+                Flashcards
+              </div>
+              <div class="progress" style="margin-bottom: var(--spacing);">
+                <div class="progress-bar" style="width: 0%;"></div>
+              </div>
+              <button class="btn primary" onclick="showFlashcards()">
+                <i class="fas fa-play"></i>
+                Commencer
+              </button>
+              <div class="chart-container" id="flashcard-stats-container">
+                <canvas id="flashcardChart"></canvas>
+              </div>
+            </div>
+          `;
+          setTimeout(initializeFlashcardChart, 100);
+        }
+        if (quizQuestions.length > 0) {
+          dashboard.innerHTML += `
+            <div class="card">
+              <button class="close-card" onclick="closeCard(this)">
+                <i class="fas fa-times"></i>
+              </button>
+              <div class="card-title">
+                <i class="fas fa-question-circle"></i>
+                Quiz
+              </div>
+              <div class="progress" style="margin-bottom: var(--spacing);">
+                <div class="progress-bar" style="width: 0%;"></div>
+              </div>
+              <button class="btn primary" onclick="showQuiz()">
+                <i class="fas fa-play"></i>
+                Commencer
+              </button>
+              <div class="chart-container" id="quiz-stats-container">
+                <canvas id="quizChart"></canvas>
+              </div>
+            </div>
+          `;
+          setTimeout(initializeQuizChart, 100);
+        }
+        if (mindMapData) {
+          dashboard.innerHTML += `
+            <div class="card">
+              <button class="close-card" onclick="closeCard(this)">
+                <i class="fas fa-times"></i>
+              </button>
+              <div class="card-title">
+                <i class="fas fa-project-diagram"></i>
+                Carte Mentale
+              </div>
+              <button class="btn primary" onclick="showMindMap()">
+                <i class="fas fa-eye"></i>
+                Visualiser
+              </button>
+              <div class="mindmap-container" id="mindmap-container">
+                <div id="mind-map"></div>
+              </div>
+            </div>
+          `;
+          setTimeout(() => renderMindMap('mind-map', mindMapData), 100);
+        }
+        // Ajout des cartes "Notes" et "Feuille Blanche" dans le dashboard
+        dashboard.innerHTML += `
+          <div class="card">
+            <button class="close-card" onclick="closeCard(this)">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="card-title">
+              <i class="fas fa-sticky-note"></i>
+              Notes
+            </div>
+            <div class="editor-toolbar">
+              <button onclick="formatText('notes-text', 'bold')"><i class="fas fa-bold"></i></button>
+              <button onclick="formatText('notes-text', 'italic')"><i class="fas fa-italic"></i></button>
+              <button onclick="formatText('notes-text', 'underline')"><i class="fas fa-underline"></i></button>
+              <button onclick="formatText('notes-text', 'highlight', 'var(--highlight-yellow)')"><i class="fas fa-highlighter" style="color: gold;"></i></button>
+              <button onclick="formatText('notes-text', 'highlight', 'var(--highlight-green)')"><i class="fas fa-highlighter" style="color: green;"></i></button>
+              <button onclick="formatText('notes-text', 'highlight', 'var(--highlight-blue)')"><i class="fas fa-highlighter" style="color: blue;"></i></button>
+              <button onclick="formatText('notes-text', 'highlight', 'var(--highlight-pink)')"><i class="fas fa-highlighter" style="color: pink;"></i></button>
+              <select onchange="changeFontSize(this, 'notes-text')" style="margin-left: auto; height: 32px; padding: 0 var(--spacing-xs); border-radius: 4px; border: var(--border);">
+                <option value="14px">Taille</option>
+                <option value="12px">Petit</option>
+                <option value="14px" selected>Normal</option>
+                <option value="18px">Grand</option>
+                <option value="24px">Très grand</option>
+              </select>
+            </div>
+            <textarea
+              id="notes-text"
+              class="text-editor"
+              placeholder="Prenez des notes ici... Elles seront sauvegardées automatiquement."
+              oninput="saveNotes()"
+            ></textarea>
+          </div>
+          <div class="card">
+            <button class="close-card" onclick="closeCard(this)">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="card-title">
+              <i class="fas fa-file-alt"></i>
+              Feuille Blanche
+            </div>
+            <div class="editor-toolbar">
+              <button onclick="formatText('blank-sheet-text', 'bold')"><i class="fas fa-bold"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'italic')"><i class="fas fa-italic"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'underline')"><i class="fas fa-underline"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'highlight', 'var(--highlight-yellow)')"><i class="fas fa-highlighter" style="color: gold;"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'highlight', 'var(--highlight-green)')"><i class="fas fa-highlighter" style="color: green;"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'highlight', 'var(--highlight-blue)')"><i class="fas fa-highlighter" style="color: blue;"></i></button>
+              <button onclick="formatText('blank-sheet-text', 'highlight', 'var(--highlight-pink)')"><i class="fas fa-highlighter" style="color: pink;"></i></button>
+              <select onchange="changeFontSize(this, 'blank-sheet-text')" style="margin-left: auto; height: 32px; padding: 0 var(--spacing-xs); border-radius: 4px; border: var(--border);">
+                <option value="14px">Taille</option>
+                <option value="12px">Petit</option>
+                <option value="14px" selected>Normal</option>
+                <option value="18px">Grand</option>
+                <option value="24px">Très grand</option>
+              </select>
+            </div>
+            <textarea
+              id="blank-sheet-text"
+              class="text-editor"
+              placeholder="Écrivez ici tout ce que vous savez sur le sujet..."
+            ></textarea>
+            <div class="btn-group">
+              <button class="btn primary" onclick="verifyBlankSheet()">
+                <i class="fas fa-check"></i>
+                Vérifier
+              </button>
+            </div>
+          </div>
+        `;
+        // Charger les notes existantes
+        const notesText = document.getElementById('notes-text');
+        if (notesText) {
+          notesText.value = notes;
+        }
+      } catch (e) {
+        showAlert("Erreur : " + e.message, "error");
+      }
+    }
+
+    // Fermer une carte
+    function closeCard(button) {
+      const card = button.closest('.card');
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => card.remove(), 300);
+      }
+    }
+
+    // Initialisation du graphique des flashcards
+    function initializeFlashcardChart() {
+      const ctx = document.getElementById('flashcardChart');
+      if (!ctx) return;
+      if (flashcardChart) {
+        flashcardChart.destroy();
+      }
+      flashcardChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Réussites', 'Échecs'],
+          datasets: [{
+            label: 'Flashcards',
+            data: [0, 0],
+            backgroundColor: ['rgba(40, 167, 69, 0.7)', 'rgba(220, 53, 69, 0.7)'],
+            borderColor: ['rgba(40, 167, 69, 1)', 'rgba(220, 53, 69, 1)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // Initialisation du graphique du quiz
+    function initializeQuizChart() {
+      const ctx = document.getElementById('quizChart');
+      if (!ctx) return;
+      if (quizChart) {
+        quizChart.destroy();
+      }
+      quizChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Réussites', 'Échecs'],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ['rgba(40, 167, 69, 0.7)', 'rgba(220, 53, 69, 0.7)'],
+            borderColor: ['rgba(40, 167, 69, 1)', 'rgba(220, 53, 69, 1)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // Mise à jour des graphiques
+    function updateFlashcardChart(successCount, failureCount) {
+      if (flashcardChart) {
+        flashcardChart.data.datasets[0].data = [successCount, failureCount];
+        flashcardChart.update();
+      }
+    }
+
+    function updateQuizChart(successCount, failureCount) {
+      if (quizChart) {
+        quizChart.data.datasets[0].data = [successCount, failureCount];
+        quizChart.update();
+      }
+    }
+
+    // Affichage de la carte mentale dans le dashboard
+    function renderMindMap(containerId, data) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      if (!window.jsMind) {
+        showAlert("La bibliothèque jsMind n'est pas chargée.", "error");
+        return;
+      }
+      try {
+        const options = {
+          container: containerId,
+          theme: 'primary',
+          editable: false
+        };
+        const mind = {
+          meta: {
+            name: data.topic,
+            author: 'Mon Apprentissage',
+            version: '0.2'
+          },
+          format: 'node_tree',
+          data: convertToJsMindFormat(data)
+        };
+        jsMind.show(options, mind);
+      } catch (e) {
+        showAlert("Erreur lors de l'affichage de la carte mentale : " + e.message, "error");
+        console.error("jsMind error:", e);
+      }
+    }
+
+    // Convertir le format de données pour jsMind
+    function convertToJsMindFormat(data) {
+      const result = {
+        id: 'root',
+        topic: data.topic,
+        children: []
+      };
+      if (data.children) {
+        data.children.forEach(child => {
+          result.children.push(convertChildToJsMindFormat(child));
+        });
+      }
+      return result;
+    }
+
+    function convertChildToJsMindFormat(child) {
+      const result = {
+        id: Math.random().toString(36).substr(2, 9),
+        topic: child.topic,
+        children: []
+      };
+      if (child.children) {
+        child.children.forEach(subChild => {
+          result.children.push(convertChildToJsMindFormat(subChild));
+        });
+      }
+      return result;
+    }
+
+    // Afficher la carte mentale en plein écran
+    function showMindMap() {
+      if (!mindMapData) {
+        showAlert("Aucune carte mentale disponible dans le JSON.", "error");
+        return;
+      }
+      const dashboard = document.getElementById('dashboard');
+      const mindmapFullscreen = document.getElementById('mindmap-fullscreen');
+      if (!dashboard || !mindmapFullscreen) return;
+      dashboard.classList.add('hidden');
+      mindmapFullscreen.style.display = 'flex';
+      setTimeout(() => mindmapFullscreen.style.opacity = '1', 10);
+      const container = document.getElementById('mind-map-full');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!window.jsMind) {
+        showAlert("La bibliothèque jsMind n'est pas chargée.", "error");
+        return;
+      }
+      try {
+        const options = {
+          container: 'mind-map-full',
+          theme: 'primary',
+          editable: false
+        };
+        const mind = {
+          meta: {
+            name: mindMapData.topic,
+            author: 'Mon Apprentissage',
+            version: '0.2'
+          },
+          format: 'node_tree',
+          data: convertToJsMindFormat(mindMapData)
+        };
+        jsMind.show(options, mind);
+      } catch (e) {
+        showAlert("Erreur lors de l'affichage de la carte mentale : " + e.message, "error");
+        console.error("jsMind error:", e);
+      }
+    }
+
+    // Afficher les flashcards
+    function showFlashcards() {
+      if (flashcards.length === 0) {
+        showAlert("Aucune flashcard disponible.", "error");
+        return;
+      }
+      const dashboard = document.getElementById('dashboard');
+      const flashcardsFullscreen = document.getElementById('flashcards-fullscreen');
+      if (dashboard && flashcardsFullscreen) {
+        dashboard.classList.add('hidden');
+        flashcardsFullscreen.style.display = 'flex';
+        setTimeout(() => flashcardsFullscreen.style.opacity = '1', 10);
+        incorrectFlashcards = [];
+        currentFlashcardIndex = 0;
+        updateFlashcardProgress();
+        showCurrentFlashcard();
+      }
+    }
+
+    // Mise à jour de la progression des flashcards
+    function updateFlashcardProgress() {
+      const progressBar = document.getElementById('flashcard-progress');
+      if (progressBar) {
+        const progress = (currentFlashcardIndex / flashcards.length) * 100;
+        progressBar.style.width = progress + '%';
+      }
+    }
+
+    // Afficher la flashcard actuelle
+    function showCurrentFlashcard() {
+      const flashcard = flashcards[currentFlashcardIndex];
+      const questionElement = document.getElementById('flashcard-question');
+      const answerElement = document.getElementById('flashcard-answer');
+      if (questionElement && answerElement) {
+        questionElement.textContent = flashcard.recto;
+        answerElement.textContent = flashcard.verso;
+        const flashcardElement = document.querySelector('.flashcard');
+        if (flashcardElement) {
+          flashcardElement.classList.remove('flipped');
+        }
+      }
+    }
+
+    // Retourner une flashcard
+    function flipFlashcard() {
+      const flashcardElement = document.querySelector('.flashcard');
+      if (flashcardElement) {
+        flashcardElement.classList.toggle('flipped');
+      }
+    }
+
+    // Réponse à une flashcard
+    function flashcardAnswer(correct) {
+      if (!correct) incorrectFlashcards.push(flashcards[currentFlashcardIndex]);
+      currentFlashcardIndex++;
+      if (currentFlashcardIndex < flashcards.length) {
+        updateFlashcardProgress();
+        showCurrentFlashcard();
+      } else {
+        if (incorrectFlashcards.length > 0) {
+          updateFlashcardChart(flashcards.length - incorrectFlashcards.length, incorrectFlashcards.length);
+          flashcards = [...incorrectFlashcards];
+          incorrectFlashcards = [];
+          currentFlashcardIndex = 0;
+          showAlert("Revoir les flashcards non réussies.", "error");
+          updateFlashcardProgress();
+          showCurrentFlashcard();
+        } else {
+          updateFlashcardChart(flashcards.length, 0);
+          showAlert("Toutes les flashcards réussies !", "success");
+          exitFullscreen('flashcards-fullscreen');
+        }
+      }
+    }
+
+    // Afficher le quiz
+    function showQuiz() {
+      if (quizQuestions.length === 0) {
+        showAlert("Aucun quiz disponible.", "error");
+        return;
+      }
+      const dashboard = document.getElementById('dashboard');
+      const quizFullscreen = document.getElementById('quiz-fullscreen');
+      if (dashboard && quizFullscreen) {
+        dashboard.classList.add('hidden');
+        quizFullscreen.style.display = 'flex';
+        setTimeout(() => quizFullscreen.style.opacity = '1', 10);
+        currentQuizIndex = 0;
+        quizScore = 0;
+        quizAnswered = false;
+        updateQuizProgress();
+        showCurrentQuizQuestion();
+        const quizNextBtn = document.getElementById('quiz-next-btn');
+        if (quizNextBtn) {
+          quizNextBtn.disabled = true;
+        }
+      }
+    }
+
+    // Mise à jour de la progression du quiz
+    function updateQuizProgress() {
+      const progressBar = document.getElementById('quiz-progress');
+      if (progressBar) {
+        const progress = (currentQuizIndex / quizQuestions.length) * 100;
+        progressBar.style.width = progress + '%';
+      }
+    }
+
+    // Afficher la question actuelle du quiz
+    function showCurrentQuizQuestion() {
+      quizAnswered = false;
+      const quizQuestion = quizQuestions[currentQuizIndex];
+      const questionElement = document.getElementById('quiz-question');
+      if (questionElement) {
+        questionElement.textContent = quizQuestion.question;
+      }
+      const optionsEl = document.getElementById('quiz-options');
+      if (optionsEl) {
+        optionsEl.innerHTML = '';
+        quizQuestion.options.forEach((option, index) => {
+          const optBtn = document.createElement('button');
+          optBtn.className = 'quiz-option';
+          optBtn.innerHTML = `<i class="fas fa-circle"></i> ${option}`;
+          optBtn.onclick = () => handleQuizAnswer(index);
+          optionsEl.appendChild(optBtn);
+          setTimeout(() => optBtn.style.opacity = '1', index * 100);
+        });
+      }
+    }
+
+    // Gérer la réponse au quiz
+    function handleQuizAnswer(selectedIndex) {
+      if (quizAnswered) return;
+      quizAnswered = true;
+      const quizQuestion = quizQuestions[currentQuizIndex];
+      const options = document.querySelectorAll('.quiz-option');
+      if (options) {
+        options.forEach((btn, idx) => {
+          btn.disabled = true;
+          const icon = btn.querySelector('i');
+          if (icon) {
+            if (idx === quizQuestion.correct) {
+              btn.classList.add('correct');
+              icon.classList.replace('fa-circle', 'fa-check-circle');
+            }
+            if (idx === selectedIndex && idx !== quizQuestion.correct) {
+              btn.classList.add('incorrect');
+              icon.classList.replace('fa-circle', 'fa-times-circle');
+            }
+          }
+        });
+      }
+      if (selectedIndex === quizQuestion.correct) quizScore++;
+      const quizNextBtn = document.getElementById('quiz-next-btn');
+      if (quizNextBtn) {
+        quizNextBtn.disabled = false;
+      }
+    }
+
+    // Question suivante du quiz
+    function nextQuizQuestion() {
+      currentQuizIndex++;
+      if (currentQuizIndex < quizQuestions.length) {
+        updateQuizProgress();
+        showCurrentQuizQuestion();
+      } else {
+        showQuizResults();
+      }
+    }
+
+    // Résultats du quiz
+    function showQuizResults() {
+      const questionElement = document.getElementById('quiz-question');
+      const optionsEl = document.getElementById('quiz-options');
+      const quizNextBtn = document.getElementById('quiz-next-btn');
+      if (questionElement && optionsEl && quizNextBtn) {
+        questionElement.textContent = `Score : ${quizScore}/${quizQuestions.length}`;
+        optionsEl.innerHTML = '';
+        quizNextBtn.textContent = 'Retour';
+        quizNextBtn.onclick = () => {
+          updateQuizChart(quizScore, quizQuestions.length - quizScore);
+          exitFullscreen('quiz-fullscreen');
+        };
+      }
+    }
+
+    // Générer un JSON via un prompt
+    function generateJSONWithPrompt() {
+      const promptInput = document.getElementById('prompt-input');
+      if (!promptInput) return;
+      const prompt = promptInput.value;
+      if (!prompt.trim()) {
+        showAlert("Veuillez entrer une description pour générer le JSON.", "error");
+        return;
+      }
+      const encodedPrompt = encodeURIComponent(
+        `Voici un exemple de JSON à suivre pour une application éducative :
+        {
+          "emoji": "🌍",
+          "flashcards": [
+            {"recto": "Quelle est la capitale de la France ?", "verso": "Paris"}
+          ],
+          "quiz": [
+            {
+              "question": "Quelle est la capitale de l'Italie ?",
+              "options": ["Rome", "Milan", "Venise", "Naples"],
+              "correct": 0
+            }
+          ],
+          "mindmap": {
+            "topic": "Géographie",
+            "children": [
+              {
+                "topic": "Europe",
+                "children": [
+                  {"topic": "France"},
+                  {"topic": "Italie"}
+                ]
+              }
+            ]
+          }
+        }
+        Génère un JSON structuré pour une application éducative avec :
+        - un emoji qui représente le sujet,
+        - des flashcards (recto/verso),
+        - un quiz (questions, options, réponse correcte),
+        - une carte mentale (thème et sous-thèmes).
+        Le sujet est : "${prompt}".
+        Réponds uniquement avec le JSON, sans explication.`
+      );
+      const chatGPTUrl = `https://chat.openai.com/?model=text-davinci-002-render-sha&prompt=${encodedPrompt}`;
+      window.open(chatGPTUrl, '_blank');
+      showAlert("Redirection vers ChatGPT pour générer le JSON avec un emoji...", "success");
+    }
+
+    // Vérifier la feuille blanche
+    function verifyBlankSheet() {
+      const blankSheetText = document.getElementById('blank-sheet-text');
+      if (!blankSheetText) return;
+      const content = blankSheetText.value;
+      if (!content.trim()) {
+        showAlert("Veuillez écrire quelque chose avant de vérifier.", "error");
+        return;
+      }
+      const jsonInput = document.getElementById('json-input');
+      if (!jsonInput) return;
+      const baseData = JSON.parse(jsonInput.value);
+      const encodedPrompt = encodeURIComponent(
+        `Voici le contenu écrit par l'utilisateur :
+        "${content}"
+        Voici le JSON de référence pour l'analyse :
+        ${JSON.stringify(baseData)}
+        Analyse ce contenu en fonction du JSON de référence et donne :
+        1. Une note sur 20 en justifiant.
+        2. Les erreurs ou omissions par rapport au JSON de référence.
+        3. Les points forts et les éléments bien maîtrisés.
+        4. Des suggestions pour améliorer les connaissances.
+        5. Une synthèse des concepts à revoir en priorité.
+        6. Une estimation du temps nécessaire pour maîtriser ces concepts.
+        7. Une liste des ressources utiles pour approfondir.
+        Sois précis et structuré dans tes réponses.`
+      );
+      const chatGPTUrl = `https://chat.openai.com/?model=text-davinci-002-render-sha&prompt=${encodedPrompt}`;
+      window.open(chatGPTUrl, '_blank');
+      showAlert("Redirection vers ChatGPT pour une analyse détaillée...", "success");
+    }
+
+    // Formater le texte
+    function formatText(textareaId, command, color) {
+      const textarea = document.getElementById(textareaId);
+      if (!textarea) return;
+      textarea.focus();
+      if (command === 'highlight') {
+        document.execCommand('hiliteColor', false, color);
+      } else {
+        document.execCommand(command, false, null);
+      }
+      if (textareaId === 'notes-text') saveNotes();
+    }
+
+    // Changer la taille de la police
+    function changeFontSize(select, textareaId) {
+      const textarea = document.getElementById(textareaId);
+      if (!textarea) return;
+      textarea.style.fontSize = select.value;
+      if (textareaId === 'notes-text') saveNotes();
+    }
+  </script>
+</body>
+</html>
